@@ -9,38 +9,15 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+	"todo/entity"
 )
 
-type User struct {
-	Id       uint
-	Email    string
-	Password string
-}
-
-type Category struct {
-	Id    uint
-	Title string
-	Color string
-
-	UserId uint
-}
-
-type Task struct {
-	Id      uint
-	Title   string
-	IsDone  bool
-	DueDate string
-
-	UserId     uint
-	CategoryId uint
-}
-
 var (
-	userStorage     []User
-	categoryStorage []Category
-	taskStorage     []Task
+	userStorage     []entity.User
+	categoryStorage []entity.Category
+	taskStorage     []entity.Task
 
-	currentUser *User
+	currentUser *entity.User
 	hash        = sha256.New()
 
 	reader *bufio.Scanner = bufio.NewScanner(os.Stdin)
@@ -69,7 +46,7 @@ func loadStorage() {
 
 }
 
-func addToUserStorage(user User) error {
+func addToUserStorage(user entity.User) error {
 
 	file, err := os.OpenFile(userStoragePath, os.O_CREATE|os.O_RDWR|os.O_APPEND, 0660)
 	defer file.Close()
@@ -112,7 +89,7 @@ func loadUserStorage() {
 	rows := bytes.Split(buff, []byte("\n"))
 
 	for _, row := range rows {
-		var user *User
+		var user *entity.User
 		if string(row[0]) != "{" {
 			continue
 		}
@@ -149,7 +126,7 @@ func entranceProcess() {
 
 func register() {
 
-	user := User{Id: uint(len(userStorage)) + 1}
+	user := entity.User{Id: uint(len(userStorage)) + 1}
 
 	fmt.Println("enter email")
 	reader.Scan()
@@ -187,7 +164,7 @@ func login() {
 		fmt.Println("you are login successfully")
 	}
 }
-func findUser(email, password string) *User {
+func findUser(email, password string) *entity.User {
 	for _, user := range userStorage {
 
 		if user.Email == email && user.Password == hex.EncodeToString(hash.Sum([]byte(password))) {
@@ -226,7 +203,7 @@ func createCategory() {
 	reader.Scan()
 	color := reader.Text()
 
-	category := Category{
+	category := entity.Category{
 		Id:     uint(len(categoryStorage)) + 1,
 		Title:  title,
 		Color:  color,
@@ -236,8 +213,8 @@ func createCategory() {
 	categoryStorage = append(categoryStorage, category)
 }
 
-func findAllUserCategoryList() []Category {
-	res := make([]Category, 0)
+func findAllUserCategoryList() []entity.Category {
+	res := make([]entity.Category, 0)
 	for _, cat := range categoryStorage {
 		if cat.UserId == currentUser.Id {
 			res = append(res, cat)
@@ -270,7 +247,7 @@ func createTask() {
 		return
 	}
 
-	task := Task{
+	task := entity.Task{
 		Id:      uint(len(taskStorage)) + 1,
 		Title:   title,
 		DueDate: dueDate,
@@ -289,9 +266,9 @@ func isCategoryValid(categoryId int) bool {
 	}
 	return false
 }
-func findAllUserTaskList() []Task {
+func findAllUserTaskList() []entity.Task {
 
-	res := make([]Task, 0)
+	res := make([]entity.Task, 0)
 
 	for _, task := range taskStorage {
 		if task.UserId == currentUser.Id {
