@@ -2,25 +2,24 @@ package main
 
 import (
 	"bufio"
-	"bytes"
-	"crypto/sha256"
-	"encoding/hex"
-	"encoding/json"
 	"fmt"
 	"os"
 	"strconv"
 	"todo/entity"
+	"todo/pkg/sha256"
+	"todo/repository"
+	"todo/repository/filestore"
 )
 
 var (
-	userStorage     []entity.User
 	categoryStorage []entity.Category
 	taskStorage     []entity.Task
 
 	currentUser *entity.User
-	hash        = sha256.New()
 
-	reader *bufio.Scanner = bufio.NewScanner(os.Stdin)
+	reader = bufio.NewScanner(os.Stdin)
+
+	userRepository repository.UserRepository
 )
 
 const (
@@ -29,7 +28,14 @@ const (
 
 func main() {
 
-	loadStorage()
+	var err error
+	if userRepository, err = filestore.NewUserRepository(
+		userStoragePath,
+		"Json",
+		sha256.New()); err != nil {
+		fmt.Println(err)
+		return
+	}
 
 	for {
 		if currentUser == nil {
@@ -40,68 +46,6 @@ func main() {
 	}
 }
 
-func loadStorage() {
-
-	loadUserStorage()
-
-}
-
-func addToUserStorage(user entity.User) error {
-
-	file, err := os.OpenFile(userStoragePath, os.O_CREATE|os.O_RDWR|os.O_APPEND, 0660)
-	defer file.Close()
-
-	if err != nil {
-		fmt.Printf("have a problem with open the file %s, err= %v", userStoragePath, err)
-		return err
-	}
-
-	userByte, err := json.Marshal(user)
-
-	if err != nil {
-		fmt.Printf("have a problem with marshaling user %s, err %v", user, err)
-		return err
-	}
-
-	_, err = file.Write(append(userByte, []byte("\n")...))
-
-	if err != nil {
-		fmt.Printf("have a problem with writing  user byte, err %v", err)
-		return err
-	}
-
-	return nil
-}
-
-func loadUserStorage() {
-	file, err := os.OpenFile(userStoragePath, os.O_RDWR|os.O_APPEND, 0660)
-
-	if err != nil {
-		fmt.Printf("have a problem with open the file %s", userStoragePath)
-	}
-
-	buff := make([]byte, 1024)
-	_, err = file.Read(buff)
-
-	if err != nil {
-		fmt.Printf("have a problem in read data from file %s err = %v", userStoragePath, err)
-	}
-	rows := bytes.Split(buff, []byte("\n"))
-
-	for _, row := range rows {
-		var user *entity.User
-		if string(row[0]) != "{" {
-			continue
-		}
-		err = json.Unmarshal(row, &user)
-
-		if err != nil {
-			fmt.Printf("have a problem in unmarshaling user data = %s, err = %v", row, err)
-			continue
-		}
-		userStorage = append(userStorage, *user)
-	}
-}
 func entranceProcess() {
 
 	for {
@@ -110,9 +54,9 @@ func entranceProcess() {
 		command := reader.Text()
 
 		if command == "register" {
-			register()
+			_ = register()
 		} else if command == "login" {
-			login()
+			_ = login()
 			if currentUser != nil {
 				return
 			}
@@ -124,29 +68,35 @@ func entranceProcess() {
 
 }
 
-func register() {
+func register() error {
 
-	user := entity.User{Id: uint(len(userStorage)) + 1}
+	fmt.Println("enter name")
+	reader.Scan()
+	name := reader.Text()
 
 	fmt.Println("enter email")
 	reader.Scan()
-	user.Email = reader.Text()
+	email := reader.Text()
 
 	fmt.Println("enter password")
 	reader.Scan()
-	pass := reader.Text()
-	user.Password = hex.EncodeToString(hash.Sum([]byte(pass)))
+	password := reader.Text()
 
-	err := addToUserStorage(user)
+	_, err := userRepository.Create(entity.User{
+		Name:     name,
+		Email:    email,
+		Password: password,
+	})
+
 	if err != nil {
-		return
+		fmt.Println(err)
+	} else {
+		fmt.Printf("Welcome %s you successfully registered\n", name)
 	}
-
-	userStorage = append(userStorage, user)
-
-	fmt.Println("you successfully registered, please login now")
+	return err
 }
-func login() {
+
+func login() error {
 
 	fmt.Println("enter email")
 	reader.Scan()
@@ -156,23 +106,18 @@ func login() {
 	reader.Scan()
 	pass := reader.Text()
 
-	currentUser = findUser(email, pass)
+	user, err := userRepository.GetByEmailAndPassword(email, pass)
 
-	if currentUser == nil {
-		fmt.Println("your email or password is wrong please try again")
+	if err != nil {
+		fmt.Println("your email or password is wrong")
 	} else {
-		fmt.Println("you are login successfully")
+		currentUser = &user
+		fmt.Printf("Welcome %s you successfully logined\n", currentUser.Name)
 	}
-}
-func findUser(email, password string) *entity.User {
-	for _, user := range userStorage {
 
-		if user.Email == email && user.Password == hex.EncodeToString(hash.Sum([]byte(password))) {
-			return &user
-		}
-	}
-	return nil
+	return err
 }
+
 func parseCommand() {
 
 	fmt.Println("select a action")
@@ -232,7 +177,7 @@ func createTask() {
 
 	fmt.Println("enter dueDate")
 	reader.Scan()
-	dueDate := reader.Text()
+	//dueDate := reader.Text()
 
 	fmt.Println("enter categoryId")
 	reader.Scan()
@@ -248,11 +193,11 @@ func createTask() {
 	}
 
 	task := entity.Task{
-		Id:      uint(len(taskStorage)) + 1,
-		Title:   title,
-		DueDate: dueDate,
-		IsDone:  false,
-		UserId:  currentUser.Id}
+		Id:    uint(len(taskStorage)) + 1,
+		Title: title,
+		//DueDate: dueDate,
+		IsDone: false,
+		UserId: currentUser.Id}
 
 	taskStorage = append(taskStorage, task)
 	fmt.Println("task successfully created")
