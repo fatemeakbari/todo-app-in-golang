@@ -10,6 +10,5 @@ type TaskRepository interface {
 	GetAllUserTask(userId uint) ([]entity.Task, error)
 	GetAllUserTaskByDueDate(dueDate time.Time, userId uint) ([]entity.Task, error)
 	GetAllTodayUserTask(userId uint) ([]entity.Task, error)
-	GetAllDoneUserTask(userId uint) ([]entity.Task, error)
 	GetAllNonDoneUserTask(userId uint) ([]entity.Task, error)
 }

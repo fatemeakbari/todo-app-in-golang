@@ -8,25 +8,27 @@ import (
 	"todo/entity"
 	"todo/pkg"
 	"todo/repository"
-	"todo/repository/serializer"
-	"todo/repository/serializer/json"
-	"todo/repository/serializer/normal"
+	"todo/serializer"
 )
 
 type userRepository struct {
-	filePath   string
-	serializer serializer.UserSerializer
-	users      []entity.User
+	filepath string
+	users    []entity.User
+
 	hash       pkg.Hash
+	serializer serializer.UserSerializer
 }
 
-func NewUserRepository(filepath, serializeMode string, hash pkg.Hash) (repository.UserRepository, error) {
+func NewUserRepository(
+	filepath string,
+	hash pkg.Hash,
+	userSerializer serializer.UserSerializer) (repository.UserRepository, error) {
 
 	userRep := userRepository{
-		filePath: filepath,
-		hash:     hash,
+		filepath:   filepath,
+		serializer: userSerializer,
+		hash:       hash,
 	}
-	userRep.setSerializer(serializeMode)
 	if err := userRep.load(); err != nil {
 		return &userRep, err
 	}
@@ -34,30 +36,18 @@ func NewUserRepository(filepath, serializeMode string, hash pkg.Hash) (repositor
 	return &userRep, nil
 }
 
-func (ur *userRepository) setSerializer(serializeMode string) {
-
-	switch serializeMode {
-	case "Normal":
-		ur.serializer = normal.UserSerializer{}
-	case "Json":
-		ur.serializer = json.UserSerializer{}
-	default:
-		ur.serializer = json.UserSerializer{}
-	}
-}
-
 func (ur *userRepository) load() error {
 
-	file, err := os.OpenFile(ur.filePath, os.O_RDWR|os.O_APPEND|os.O_CREATE, 0777)
+	file, err := os.OpenFile(ur.filepath, os.O_RDWR|os.O_APPEND|os.O_CREATE, 0777)
 	defer file.Close()
 	if err != nil {
-		return fmt.Errorf("can not open file %s with error %w", ur.filePath, err)
+		return fmt.Errorf("can not open file %s with error %w", ur.filepath, err)
 	}
 
 	var buffSize int64
 
 	if fileStat, sErr := file.Stat(); sErr != nil {
-		return fmt.Errorf("can not get stat of file %s with error %w", ur.filePath, sErr)
+		return fmt.Errorf("can not get stat of file %s with error %w", ur.filepath, sErr)
 	} else {
 		buffSize = fileStat.Size()
 	}
@@ -65,7 +55,7 @@ func (ur *userRepository) load() error {
 	buff := make([]byte, buffSize)
 	if _, rErr := file.Read(buff); rErr != nil {
 
-		return fmt.Errorf("can not read file %s with error %w", ur.filePath, rErr)
+		return fmt.Errorf("can not read file %s with error %w", ur.filepath, rErr)
 	}
 
 	rows := bytes.Split(buff, []byte("\n"))
@@ -88,10 +78,10 @@ func (ur *userRepository) load() error {
 
 func (ur *userRepository) Create(user entity.User) (entity.User, error) {
 
-	file, err := os.OpenFile(ur.filePath, os.O_CREATE|os.O_RDWR|os.O_APPEND, 0777)
+	file, err := os.OpenFile(ur.filepath, os.O_CREATE|os.O_RDWR|os.O_APPEND, 0777)
 
 	if err != nil {
-		return user, fmt.Errorf("can not open file %s with error %w", ur.filePath, err)
+		return user, fmt.Errorf("can not open file %s with error %w", ur.filepath, err)
 	}
 	defer file.Close()
 

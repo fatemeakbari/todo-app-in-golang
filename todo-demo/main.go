@@ -9,31 +9,41 @@ import (
 	"todo/pkg/sha256"
 	"todo/repository"
 	"todo/repository/filestore"
+	"todo/serializer"
 )
 
 var (
-	categoryStorage []entity.Category
-	taskStorage     []entity.Task
+	taskStorage []entity.Task
 
 	currentUser *entity.User
 
 	reader = bufio.NewScanner(os.Stdin)
 
-	userRepository repository.UserRepository
+	userRepository     repository.UserRepository
+	categoryRepository repository.CategoryRepository
 )
 
 const (
-	userStoragePath = "user.txt"
+	userStoragePath     = "user.txt"
+	categoryStoragePath = "category.txt"
 )
 
 func main() {
 
-	var err error
-	if userRepository, err = filestore.NewUserRepository(
+	var uErr error
+	if userRepository, uErr = filestore.NewUserRepository(
 		userStoragePath,
-		"Json",
-		sha256.New()); err != nil {
-		fmt.Println(err)
+		sha256.New(),
+		serializer.GetUserSerializer("Json")); uErr != nil {
+		fmt.Println(uErr)
+		return
+	}
+
+	var cErr error
+	if categoryRepository, cErr = filestore.NewCategoryRepository(
+		categoryStoragePath,
+		serializer.GetCategorySerializer("Json")); cErr != nil {
+		fmt.Println(cErr)
 		return
 	}
 
@@ -134,7 +144,7 @@ func parseCommand() {
 	case "create-category":
 		createCategory()
 	case "category-list":
-		_ = findAllUserCategoryList()
+		_ = categoryRepository.GetAllUserCategory(currentUser.Id)
 	case "exit":
 	}
 }
@@ -144,31 +154,17 @@ func createCategory() {
 	reader.Scan()
 	title := reader.Text()
 
-	fmt.Println("enter dueDate")
-	reader.Scan()
-	color := reader.Text()
-
 	category := entity.Category{
-		Id:     uint(len(categoryStorage)) + 1,
 		Title:  title,
-		Color:  color,
 		UserId: currentUser.Id,
 	}
 
-	categoryStorage = append(categoryStorage, category)
-}
-
-func findAllUserCategoryList() []entity.Category {
-	res := make([]entity.Category, 0)
-	for _, cat := range categoryStorage {
-		if cat.UserId == currentUser.Id {
-			res = append(res, cat)
-		}
+	_, err := categoryRepository.Create(category)
+	if err != nil {
+		fmt.Println(err)
 	}
-
-	fmt.Println(res)
-	return res
 }
+
 func createTask() {
 
 	fmt.Println("enter title")
@@ -204,12 +200,10 @@ func createTask() {
 }
 
 func isCategoryValid(categoryId int) bool {
-	for _, cat := range categoryStorage {
-		if cat.Id == uint(categoryId) && cat.UserId == currentUser.Id {
-			return true
-		}
+	if _, err := categoryRepository.GetById(uint(categoryId)); err != nil {
+		return false
 	}
-	return false
+	return true
 }
 func findAllUserTaskList() []entity.Task {
 
