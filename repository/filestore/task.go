@@ -100,7 +100,6 @@ func (tr *taskRepository) GetAllUserTask(userId uint) []entity.Task {
 		}
 	}
 
-	fmt.Println(res)
 	return res
 }
 func (tr *taskRepository) GetAllUserTaskByDueDate(dueDate time.Time, userId uint) []entity.Task {
@@ -108,13 +107,12 @@ func (tr *taskRepository) GetAllUserTaskByDueDate(dueDate time.Time, userId uint
 
 	for _, task := range tr.tasks {
 
-		if dueDate.Format(cfg.DATE_FORMAT) == task.DueDate.Format(cfg.DATE_FORMAT) &&
+		if dueDate.Format(cfg.DateFormat) == task.DueDate.Format(cfg.DateFormat) &&
 			task.UserId == userId {
 			res = append(res, task)
 		}
 	}
 
-	fmt.Println(res)
 	return res
 }
 func (tr *taskRepository) GetAllTodayDueDateUserTask(userId uint) []entity.Task {
@@ -131,6 +129,5 @@ func (tr *taskRepository) GetAllNonDoneUserTask(userId uint) []entity.Task {
 		}
 	}
 
-	fmt.Println(res)
 	return res
 }

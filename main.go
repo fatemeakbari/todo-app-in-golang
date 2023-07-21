@@ -24,42 +24,29 @@ var (
 	taskRepository     repository.TaskRepository
 )
 
-const (
-	userStoragePath     = "user.txt"
-	categoryStoragePath = "category.txt"
-	taskStoragePath     = "task.txt"
-)
-
 func main() {
-
-	//now := time.Now()
-	////snow := now.Format("2006-01-02 15:04:05")
-	////
-	//fmt.Println(now)
-	//
-	//t, _ := time.Parse("2006-01-02 15:04:05", "2023-07-20 09:29:18")
 
 	var uErr error
 	if userRepository, uErr = filestore.NewUserRepository(
-		userStoragePath,
+		cfg.UserStoragePath,
 		sha256.New(),
-		serializer.GetUserSerializer("Json")); uErr != nil {
+		serializer.GetUserSerializer(cfg.SerializerMode)); uErr != nil {
 		fmt.Println(uErr)
 		return
 	}
 
 	var cErr error
 	if categoryRepository, cErr = filestore.NewCategoryRepository(
-		categoryStoragePath,
-		serializer.GetCategorySerializer("Json")); cErr != nil {
+		cfg.CategoryStoragePath,
+		serializer.GetCategorySerializer(cfg.SerializerMode)); cErr != nil {
 		fmt.Println(cErr)
 		return
 	}
 
 	var tErr error
 	if taskRepository, tErr = filestore.NewTaskRepository(
-		taskStoragePath,
-		serializer.GetTaskSerializer("Json")); tErr != nil {
+		cfg.TaskStoragePath,
+		serializer.GetTaskSerializer(cfg.SerializerMode)); tErr != nil {
 		fmt.Println(tErr)
 		return
 	}
@@ -147,26 +134,37 @@ func login() error {
 
 func parseCommand() {
 
-	fmt.Println("select a action")
+	fmt.Println("select a action\nyou can enter action-list to see all actions")
 	reader.Scan()
 	command := reader.Text()
 
 	switch command {
 
+	case "action-list":
+		actionList()
 	case "task-list":
-		_ = findAllUserTaskList()
+		fmt.Println(taskRepository.GetAllUserTask(currentUser.Id))
 	case "create-task":
 		createTask()
 	case "today-task-list":
-		taskRepository.GetAllTodayDueDateUserTask(currentUser.Id)
+		fmt.Println(taskRepository.GetAllTodayDueDateUserTask(currentUser.Id))
+	case "non-done-task-list":
+		fmt.Println(taskRepository.GetAllNonDoneUserTask(currentUser.Id))
 	case "create-category":
 		createCategory()
 	case "category-list":
-		_ = categoryRepository.GetAllUserCategory(currentUser.Id)
+		fmt.Println(categoryRepository.GetAllUserCategory(currentUser.Id))
 	case "exit":
+		os.Exit(0)
+	default:
+		fmt.Println("your command is wrong please run action-list for more info")
+
 	}
 }
 
+func actionList() {
+	fmt.Println("1.create-category\n2.category-list\n3.create-task\n4.today-task-list\n5.non-don-task-list\n6.task-list\n7.exit")
+}
 func createCategory() {
 	fmt.Println("enter title")
 	reader.Scan()
@@ -193,7 +191,7 @@ func createTask() {
 
 	reader.Scan()
 	sDueDate := reader.Text()
-	dueDate, err := time.Parse(cfg.TIMESTAMP_FORMAT, sDueDate)
+	dueDate, err := time.Parse(cfg.TimestampFormat, sDueDate)
 	if err != nil {
 		fmt.Printf("dueDate format is not correct")
 	}
@@ -226,8 +224,4 @@ func isCategoryValid(categoryId int) bool {
 		return false
 	}
 	return true
-}
-func findAllUserTaskList() []entity.Task {
-
-	return taskRepository.GetAllUserTask(currentUser.Id)
 }

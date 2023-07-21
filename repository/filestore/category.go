@@ -111,6 +111,5 @@ func (cr *categoryRepository) GetAllUserCategory(userId uint) []entity.Category 
 			res = append(res, cat)
 		}
 	}
-	fmt.Println(res)
 	return res
 }

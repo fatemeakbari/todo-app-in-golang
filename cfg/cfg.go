@@ -1,7 +1,13 @@
 package cfg
 
 const (
-	TIMESTAMP_FORMAT = "2006-01-02 15:04:05"
-	DATE_FORMAT      = "2006-01-02"
-	TIME_FORMAT      = "15:04:05"
+	TimestampFormat = "2006-01-02 15:04:05"
+	DateFormat      = "2006-01-02"
+	TimeFormat      = "15:04:05"
+
+	UserStoragePath     = "user.txt"
+	CategoryStoragePath = "category.txt"
+	TaskStoragePath     = "task.txt"
+
+	SerializerMode = "Json" //can be Json or Normal
 )
