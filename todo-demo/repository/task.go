@@ -6,9 +6,9 @@ import (
 )
 
 type TaskRepository interface {
-	Create(t *entity.Task) (entity.Task, error)
-	GetAllUserTask(userId uint) ([]entity.Task, error)
-	GetAllUserTaskByDueDate(dueDate time.Time, userId uint) ([]entity.Task, error)
-	GetAllTodayUserTask(userId uint) ([]entity.Task, error)
-	GetAllNonDoneUserTask(userId uint) ([]entity.Task, error)
+	Create(t entity.Task) (entity.Task, error)
+	GetAllUserTask(userId uint) []entity.Task
+	GetAllUserTaskByDueDate(dueDate time.Time, userId uint) []entity.Task
+	GetAllTodayDueDateUserTask(userId uint) []entity.Task
+	GetAllNonDoneUserTask(userId uint) []entity.Task
 }

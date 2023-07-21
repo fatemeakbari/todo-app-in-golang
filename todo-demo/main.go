@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+	"time"
+	"todo/cfg"
 	"todo/entity"
 	"todo/pkg/sha256"
 	"todo/repository"
@@ -13,22 +15,29 @@ import (
 )
 
 var (
-	taskStorage []entity.Task
-
 	currentUser *entity.User
 
 	reader = bufio.NewScanner(os.Stdin)
 
 	userRepository     repository.UserRepository
 	categoryRepository repository.CategoryRepository
+	taskRepository     repository.TaskRepository
 )
 
 const (
 	userStoragePath     = "user.txt"
 	categoryStoragePath = "category.txt"
+	taskStoragePath     = "task.txt"
 )
 
 func main() {
+
+	//now := time.Now()
+	////snow := now.Format("2006-01-02 15:04:05")
+	////
+	//fmt.Println(now)
+	//
+	//t, _ := time.Parse("2006-01-02 15:04:05", "2023-07-20 09:29:18")
 
 	var uErr error
 	if userRepository, uErr = filestore.NewUserRepository(
@@ -44,6 +53,14 @@ func main() {
 		categoryStoragePath,
 		serializer.GetCategorySerializer("Json")); cErr != nil {
 		fmt.Println(cErr)
+		return
+	}
+
+	var tErr error
+	if taskRepository, tErr = filestore.NewTaskRepository(
+		taskStoragePath,
+		serializer.GetTaskSerializer("Json")); tErr != nil {
+		fmt.Println(tErr)
 		return
 	}
 
@@ -141,6 +158,7 @@ func parseCommand() {
 	case "create-task":
 		createTask()
 	case "today-task-list":
+		taskRepository.GetAllTodayDueDateUserTask(currentUser.Id)
 	case "create-category":
 		createCategory()
 	case "category-list":
@@ -171,17 +189,18 @@ func createTask() {
 	reader.Scan()
 	title := reader.Text()
 
-	fmt.Println("enter dueDate")
+	fmt.Println("enter dueTime\n **guid your time format must be same as\nYYYY-MM-DD HH:MM:SS for example 2006-01-02 15:04:05")
+
 	reader.Scan()
-	//dueDate := reader.Text()
+	sDueDate := reader.Text()
+	dueDate, err := time.Parse(cfg.TIMESTAMP_FORMAT, sDueDate)
+	if err != nil {
+		fmt.Printf("dueDate format is not correct")
+	}
 
 	fmt.Println("enter categoryId")
 	reader.Scan()
-	categoryId, err := strconv.Atoi(reader.Text())
-
-	if err != nil {
-		return
-	}
+	categoryId, _ := strconv.Atoi(reader.Text())
 
 	if !isCategoryValid(categoryId) {
 		fmt.Println("categoryId is wrong")
@@ -189,14 +208,17 @@ func createTask() {
 	}
 
 	task := entity.Task{
-		Id:    uint(len(taskStorage)) + 1,
-		Title: title,
-		//DueDate: dueDate,
-		IsDone: false,
-		UserId: currentUser.Id}
+		Title:      title,
+		DueDate:    dueDate,
+		IsDone:     false,
+		CategoryId: uint(categoryId),
+		UserId:     currentUser.Id}
 
-	taskStorage = append(taskStorage, task)
-	fmt.Println("task successfully created")
+	if _, err := taskRepository.Create(task); err != nil {
+		fmt.Println(err)
+	} else {
+		fmt.Println("task successfully created")
+	}
 }
 
 func isCategoryValid(categoryId int) bool {
@@ -207,14 +229,5 @@ func isCategoryValid(categoryId int) bool {
 }
 func findAllUserTaskList() []entity.Task {
 
-	res := make([]entity.Task, 0)
-
-	for _, task := range taskStorage {
-		if task.UserId == currentUser.Id {
-			res = append(res, task)
-		}
-	}
-
-	fmt.Println(res)
-	return res
+	return taskRepository.GetAllUserTask(currentUser.Id)
 }
