@@ -14,6 +14,6 @@ todo actions:
 6. list task(today task/non done task/ all task)
 
 
-you can change storage path in cfg/cfg.go path
+you can change the storage path in cfg/cfg.go file
 
 if you change SerializerMode in cfg.go you must delete older storage file
