@@ -233,7 +233,7 @@ func createTask() {
 }
 
 func isCategoryValid(categoryId int) bool {
-	if _, err := categoryRepository.GetById(uint(categoryId)); err != nil {
+	if _, err := categoryRepository.GetUserCategoryById(uint(categoryId), currentUser.ID); err != nil {
 		return false
 	}
 	return true

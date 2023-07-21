@@ -95,10 +95,10 @@ func (cr *categoryRepository) Create(category entity.Category) (entity.Category,
 	return category, nil
 }
 
-func (cr *categoryRepository) GetById(categoryId uint) (entity.Category, error) {
+func (cr *categoryRepository) GetUserCategoryById(categoryId, userId uint) (entity.Category, error) {
 
 	for _, cat := range cr.categories {
-		if cat.ID == categoryId {
+		if cat.ID == categoryId && cat.UserId == userId {
 			return cat, nil
 		}
 	}
