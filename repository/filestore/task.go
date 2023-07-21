@@ -7,6 +7,7 @@ import (
 	"time"
 	"todo/cfg"
 	"todo/entity"
+	"todo/logger"
 	"todo/repository"
 	"todo/serializer"
 )
@@ -32,57 +33,59 @@ func NewTaskRepository(filepath string, taskSerializer serializer.TaskSerializer
 
 func (tr *taskRepository) load() error {
 
-	file, err := os.OpenFile(tr.filepath, os.O_RDWR|os.O_APPEND|os.O_CREATE, 0777)
-	defer file.Close()
+	buff, err := readFileAsByte(tr.filepath)
+
 	if err != nil {
-		return fmt.Errorf("can not open file %s with error %w", tr.filepath, err)
-	}
+		logger.LOGGER.Error(logger.RichError{
+			MethodName: "load",
+			Parent:     err,
+			Message:    "problem in reading file " + tr.filepath},
+		)
 
-	var buffSize int64
-
-	if fileStat, sErr := file.Stat(); sErr != nil {
-		return fmt.Errorf("can not get stat of file %s with error %w", tr.filepath, sErr)
-	} else {
-		buffSize = fileStat.Size()
-	}
-
-	buff := make([]byte, buffSize)
-	if _, rErr := file.Read(buff); rErr != nil {
-
-		return fmt.Errorf("can not read file %s with error %w", tr.filepath, rErr)
+		return fmt.Errorf("problem in loading user storage")
 	}
 
 	rows := bytes.Split(buff, []byte("\n"))
 
-	for _, row := range rows[:len(rows)-1] {
+	for _, row := range rows {
 		var task entity.Task
 
 		if sErr := tr.serializer.Deserialize(row, &task); sErr != nil {
-			fmt.Println(sErr)
+			logger.LOGGER.Error(logger.RichError{MethodName: "load", Parent: sErr})
+
 			continue
 		} else {
 
 			tr.tasks = append(tr.tasks, task)
 		}
 	}
+
+	logger.LOGGER.Info("task storage loaded successfully")
+
 	return nil
 }
 
 func (tr *taskRepository) Create(task entity.Task) (entity.Task, error) {
 	file, err := os.OpenFile(tr.filepath, os.O_CREATE|os.O_APPEND|os.O_RDWR, 0777)
 	if err != nil {
-		return task, fmt.Errorf("can not open file %s, err: %w", tr.filepath, err)
+		logger.LOGGER.Error(logger.RichError{MethodName: "Create", Parent: err})
+
+		return task, fmt.Errorf("problem in open storage file")
 	}
 	defer file.Close()
 
 	task.Id = uint(len(tr.tasks)) + 1
 	tByte, sErr := tr.serializer.Serialize(task)
 	if sErr != nil {
-		return task, fmt.Errorf("can not serialize task, err: %w", sErr)
+		logger.LOGGER.Error(logger.RichError{MethodName: "Create", Parent: sErr})
+
+		return task, fmt.Errorf("problem in serialzie task")
 	}
 
 	if _, wErr := file.Write(append(tByte, []byte("\n")...)); wErr != nil {
-		return task, fmt.Errorf("can not write task, err: %w", wErr)
+		logger.LOGGER.Error(logger.RichError{MethodName: "Create", Parent: wErr})
+
+		return task, fmt.Errorf("problem in write task")
 	}
 
 	tr.tasks = append(tr.tasks, task)

@@ -9,5 +9,7 @@ const (
 	CategoryStoragePath = "category.txt"
 	TaskStoragePath     = "task.txt"
 
+	LogPath = "log.txt"
+
 	SerializerMode = "Json" //can be Json or Normal
 )

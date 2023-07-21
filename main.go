@@ -134,7 +134,7 @@ func login() error {
 
 func parseCommand() {
 
-	fmt.Println("select a action\nyou can enter action-list to see all actions")
+	fmt.Println("select a action\n**you can enter action-list to see all actions")
 	reader.Scan()
 	command := reader.Text()
 
@@ -175,9 +175,11 @@ func createCategory() {
 		UserId: currentUser.Id,
 	}
 
-	_, err := categoryRepository.Create(category)
+	cat, err := categoryRepository.Create(category)
 	if err != nil {
 		fmt.Println(err)
+	} else {
+		fmt.Println("your category created successfully, category: ", cat)
 	}
 }
 
@@ -187,13 +189,14 @@ func createTask() {
 	reader.Scan()
 	title := reader.Text()
 
-	fmt.Println("enter dueTime\n **guid your time format must be same as\nYYYY-MM-DD HH:MM:SS for example 2006-01-02 15:04:05")
+	fmt.Println("enter dueTime\n**guid your time format must be same as\nYYYY-MM-DD HH:MM:SS for example 2006-01-02 15:04:05")
 
 	reader.Scan()
 	sDueDate := reader.Text()
 	dueDate, err := time.Parse(cfg.TimestampFormat, sDueDate)
 	if err != nil {
-		fmt.Printf("dueDate format is not correct")
+		fmt.Println("dueDate format is not correct")
+		return
 	}
 
 	fmt.Println("enter categoryId")

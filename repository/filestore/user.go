@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"todo/entity"
+	"todo/logger"
 	"todo/pkg"
 	"todo/repository"
 	"todo/serializer"
@@ -38,41 +39,34 @@ func NewUserRepository(
 
 func (ur *userRepository) load() error {
 
-	file, err := os.OpenFile(ur.filepath, os.O_RDWR|os.O_APPEND|os.O_CREATE, 0777)
-	defer file.Close()
+	buff, err := readFileAsByte(ur.filepath)
+
 	if err != nil {
-		return fmt.Errorf("can not open file %s with error %w", ur.filepath, err)
+		logger.LOGGER.Error(logger.RichError{
+			MethodName: "load",
+			Parent:     err,
+			Message:    "problem in reading file " + ur.filepath},
+		)
+
+		return fmt.Errorf("problem in loading user storage")
 	}
-
-	var buffSize int64
-
-	if fileStat, sErr := file.Stat(); sErr != nil {
-		return fmt.Errorf("can not get stat of file %s with error %w", ur.filepath, sErr)
-	} else {
-		buffSize = fileStat.Size()
-	}
-
-	buff := make([]byte, buffSize)
-	if _, rErr := file.Read(buff); rErr != nil {
-
-		return fmt.Errorf("can not read file %s with error %w", ur.filepath, rErr)
-	}
-
 	rows := bytes.Split(buff, []byte("\n"))
 
 	for _, row := range rows[:len(rows)-1] {
 		var user entity.User
-		if string(row[0]) != "{" {
-			continue
-		}
+		//if string(row[0]) != "{" {
+		//	continue
+		//}
 		if sErr := ur.serializer.Deserialize(row, &user); sErr != nil {
-			fmt.Println(sErr)
+			logger.LOGGER.Error(logger.RichError{MethodName: "load", Parent: sErr})
+
 			continue
 		} else {
 
 			ur.users = append(ur.users, user)
 		}
 	}
+	logger.LOGGER.Info("user storage loaded successfully")
 	return nil
 }
 
@@ -81,7 +75,9 @@ func (ur *userRepository) Create(user entity.User) (entity.User, error) {
 	file, err := os.OpenFile(ur.filepath, os.O_CREATE|os.O_RDWR|os.O_APPEND, 0777)
 
 	if err != nil {
-		return user, fmt.Errorf("can not open file %s with error %w", ur.filepath, err)
+		logger.LOGGER.Error(logger.RichError{MethodName: "Create", Parent: err})
+
+		return user, fmt.Errorf("problem in open storage file")
 	}
 	defer file.Close()
 
@@ -90,13 +86,17 @@ func (ur *userRepository) Create(user entity.User) (entity.User, error) {
 	userByte, sErr := ur.serializer.Serialize(user)
 
 	if sErr != nil {
-		return user, fmt.Errorf("can not serialize user %w", sErr)
+		logger.LOGGER.Error(logger.RichError{MethodName: "Create", Parent: sErr})
+
+		return user, fmt.Errorf("problem is save user")
 	}
 
 	_, wErr := file.Write(append(userByte, []byte("\n")...))
 
 	if wErr != nil {
-		return user, fmt.Errorf("have a problem with writing  user byte, err %w", wErr)
+		logger.LOGGER.Error(logger.RichError{MethodName: "Create", Parent: wErr})
+
+		return user, fmt.Errorf("problem is save user")
 	}
 
 	ur.users = append(ur.users, user)

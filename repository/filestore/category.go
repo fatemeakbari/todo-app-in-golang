@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"todo/entity"
+	"todo/logger"
 	"todo/repository"
 	"todo/serializer"
 )
@@ -30,48 +31,46 @@ func NewCategoryRepository(filepath string, serializer serializer.CategorySerial
 
 func (cr *categoryRepository) load() error {
 
-	file, err := os.OpenFile(cr.filepath, os.O_RDWR|os.O_APPEND|os.O_CREATE, 0777)
-	defer file.Close()
+	buff, err := readFileAsByte(cr.filepath)
+
 	if err != nil {
-		return fmt.Errorf("can not open file %s with error %w", cr.filepath, err)
-	}
+		logger.LOGGER.Error(logger.RichError{
+			MethodName: "load",
+			Parent:     err,
+			Message:    "problem in reading file " + cr.filepath},
+		)
 
-	var buffSize int64
-
-	if fileStat, sErr := file.Stat(); sErr != nil {
-		return fmt.Errorf("can not get stat of file %s with error %w", cr.filepath, sErr)
-	} else {
-		buffSize = fileStat.Size()
-	}
-
-	buff := make([]byte, buffSize)
-	if _, rErr := file.Read(buff); rErr != nil {
-
-		return fmt.Errorf("can not read file %s with error %w", cr.filepath, rErr)
+		return fmt.Errorf("problem in loading user storage")
 	}
 
 	rows := bytes.Split(buff, []byte("\n"))
 
 	for _, row := range rows[:len(rows)-1] {
 		var category entity.Category
-		if string(row[0]) != "{" {
-			continue
-		}
+		//if string(row[0]) != "{" {
+		//	continue
+		//}
 		if sErr := cr.serializer.Deserialize(row, &category); sErr != nil {
-			fmt.Println(sErr)
+			logger.LOGGER.Error(logger.RichError{MethodName: "load", Parent: sErr})
+
 			continue
 		} else {
 
 			cr.categories = append(cr.categories, category)
 		}
 	}
+
+	logger.LOGGER.Info("category storage loaded successfully")
+
 	return nil
 }
 func (cr *categoryRepository) Create(category entity.Category) (entity.Category, error) {
 	file, err := os.OpenFile(cr.filepath, os.O_CREATE|os.O_RDWR|os.O_APPEND, 0777)
 
 	if err != nil {
-		return category, fmt.Errorf("can not open file %s with error %w", cr.filepath, err)
+		logger.LOGGER.Error(logger.RichError{MethodName: "Create", Parent: err})
+
+		return category, fmt.Errorf("problem in open storage file")
 	}
 	defer file.Close()
 
@@ -79,13 +78,17 @@ func (cr *categoryRepository) Create(category entity.Category) (entity.Category,
 	catByte, sErr := cr.serializer.Serialize(category)
 
 	if sErr != nil {
-		return category, fmt.Errorf("can not serialize category %w", sErr)
+		logger.LOGGER.Error(logger.RichError{MethodName: "Create", Parent: sErr})
+
+		return category, fmt.Errorf("problem in serialize category")
 	}
 
 	_, wErr := file.Write(append(catByte, []byte("\n")...))
 
 	if wErr != nil {
-		return category, fmt.Errorf("have a problem with writing  category byte, err %w", wErr)
+		logger.LOGGER.Error(logger.RichError{MethodName: "Create", Parent: wErr})
+
+		return category, fmt.Errorf("problem in write category")
 	}
 
 	cr.categories = append(cr.categories, category)
