@@ -81,7 +81,7 @@ func (ur *userRepository) Create(user entity.User) (entity.User, error) {
 	}
 	defer file.Close()
 
-	user.Id = uint(len(ur.users)) + 1
+	user.ID = uint(len(ur.users)) + 1
 	user.Password = ur.hash.Hash(user.Password)
 	userByte, sErr := ur.serializer.Serialize(user)
 

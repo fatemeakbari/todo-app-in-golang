@@ -12,7 +12,7 @@ type CategorySerializer struct {
 }
 
 func (CategorySerializer) Serialize(c entity.Category) ([]byte, error) {
-	return []byte(fmt.Sprintf("Id=%d, Title=%s, UserId=%d", c.Id, c.Title, c.UserId)), nil
+	return []byte(fmt.Sprintf("ID=%d, Title=%s, UserId=%d", c.ID, c.Title, c.UserId)), nil
 
 }
 
@@ -26,9 +26,9 @@ func (CategorySerializer) Deserialize(cByte []byte, c *entity.Category) error {
 			key, val := field[0], field[1]
 
 			switch key {
-			case "Id":
+			case "ID":
 				id, _ := strconv.Atoi(val)
-				c.Id = uint(id)
+				c.ID = uint(id)
 			case "Title":
 				c.Title = val
 			case "UserId":

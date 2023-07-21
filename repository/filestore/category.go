@@ -74,7 +74,7 @@ func (cr *categoryRepository) Create(category entity.Category) (entity.Category,
 	}
 	defer file.Close()
 
-	category.Id = uint(len(cr.categories)) + 1
+	category.ID = uint(len(cr.categories)) + 1
 	catByte, sErr := cr.serializer.Serialize(category)
 
 	if sErr != nil {
@@ -98,7 +98,7 @@ func (cr *categoryRepository) Create(category entity.Category) (entity.Category,
 func (cr *categoryRepository) GetById(categoryId uint) (entity.Category, error) {
 
 	for _, cat := range cr.categories {
-		if cat.Id == categoryId {
+		if cat.ID == categoryId {
 			return cat, nil
 		}
 	}

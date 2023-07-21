@@ -14,7 +14,7 @@ type TaskSerializer struct {
 }
 
 func (s TaskSerializer) Serialize(t entity.Task) ([]byte, error) {
-	return []byte(fmt.Sprintf("Id=%d, Title=%s, IsDone=%t, DueDate=%s, UserId=%d, CategoryId=%d", t.Id, t.Title, t.IsDone, t.DueDate.Format(cfg.TimestampFormat), t.UserId, t.CategoryId)), nil
+	return []byte(fmt.Sprintf("ID=%d, Title=%s, IsDone=%t, DueDate=%s, UserId=%d, CategoryId=%d", t.ID, t.Title, t.IsDone, t.DueDate.Format(cfg.TimestampFormat), t.UserId, t.CategoryId)), nil
 }
 
 func (s TaskSerializer) Deserialize(tByte []byte, t *entity.Task) error {
@@ -28,9 +28,9 @@ func (s TaskSerializer) Deserialize(tByte []byte, t *entity.Task) error {
 			key, val := field[0], field[1]
 
 			switch key {
-			case "Id":
+			case "ID":
 				id, _ := strconv.Atoi(val)
-				t.Id = uint(id)
+				t.ID = uint(id)
 			case "Title":
 				t.Title = val
 			case "IsDone":

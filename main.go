@@ -63,7 +63,10 @@ func main() {
 func entranceProcess() {
 
 	for {
-		fmt.Println("\nplease select \n1-login \n2-register \n3-exit\ncommand to continue")
+		fmt.Println("please select one of follow command to continue\n" +
+			"1-login\n" +
+			"2-register\n" +
+			"3-exit")
 		reader.Scan()
 		command := reader.Text()
 
@@ -143,17 +146,17 @@ func parseCommand() {
 	case "action-list":
 		actionList()
 	case "task-list":
-		fmt.Println(taskRepository.GetAllUserTask(currentUser.Id))
+		fmt.Println(taskRepository.GetAllUserTask(currentUser.ID))
 	case "create-task":
 		createTask()
 	case "today-task-list":
-		fmt.Println(taskRepository.GetAllTodayDueDateUserTask(currentUser.Id))
+		fmt.Println(taskRepository.GetAllTodayDueDateUserTask(currentUser.ID))
 	case "non-done-task-list":
-		fmt.Println(taskRepository.GetAllNonDoneUserTask(currentUser.Id))
+		fmt.Println(taskRepository.GetAllNonDoneUserTask(currentUser.ID))
 	case "create-category":
 		createCategory()
 	case "category-list":
-		fmt.Println(categoryRepository.GetAllUserCategory(currentUser.Id))
+		fmt.Println(categoryRepository.GetAllUserCategory(currentUser.ID))
 	case "exit":
 		os.Exit(0)
 	default:
@@ -163,7 +166,14 @@ func parseCommand() {
 }
 
 func actionList() {
-	fmt.Println("1.create-category\n2.category-list\n3.create-task\n4.today-task-list\n5.non-don-task-list\n6.task-list\n7.exit")
+	fmt.Println(
+		"1.create-category\n" +
+			"2.category-list\n" +
+			"3.create-task\n" +
+			"4.today-task-list\n" +
+			"5.non-don-task-list\n" +
+			"6.task-list\n" +
+			"7.exit")
 }
 func createCategory() {
 	fmt.Println("enter title")
@@ -172,7 +182,7 @@ func createCategory() {
 
 	category := entity.Category{
 		Title:  title,
-		UserId: currentUser.Id,
+		UserId: currentUser.ID,
 	}
 
 	cat, err := categoryRepository.Create(category)
@@ -213,7 +223,7 @@ func createTask() {
 		DueDate:    dueDate,
 		IsDone:     false,
 		CategoryId: uint(categoryId),
-		UserId:     currentUser.Id}
+		UserId:     currentUser.ID}
 
 	if _, err := taskRepository.Create(task); err != nil {
 		fmt.Println(err)

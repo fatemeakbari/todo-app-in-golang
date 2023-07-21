@@ -12,7 +12,7 @@ type UserSerializer struct {
 }
 
 func (s UserSerializer) Serialize(u entity.User) ([]byte, error) {
-	return []byte(fmt.Sprintf("Id=%d, Name=%s, Email=%s, Password=%s", u.Id, u.Name, u.Email, u.Password)), nil
+	return []byte(fmt.Sprintf("ID=%d, Name=%s, Email=%s, Password=%s", u.ID, u.Name, u.Email, u.Password)), nil
 }
 
 func (s UserSerializer) Deserialize(userByte []byte, u *entity.User) error {
@@ -26,12 +26,12 @@ func (s UserSerializer) Deserialize(userByte []byte, u *entity.User) error {
 			key, val := field[0], field[1]
 
 			switch key {
-			case "Id":
+			case "ID":
 				if id, err := strconv.Atoi(val); err != nil {
 
-					return fmt.Errorf(`user Id %v is in wrong format, err: %w`, val, err)
+					return fmt.Errorf(`user ID %v is in wrong format, err: %w`, val, err)
 				} else {
-					u.Id = uint(id)
+					u.ID = uint(id)
 				}
 			case "Name":
 				u.Name = val

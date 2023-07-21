@@ -7,7 +7,7 @@ import (
 )
 
 type Task struct {
-	Id      uint
+	ID      uint
 	Title   string
 	IsDone  bool
 	DueDate time.Time
@@ -17,5 +17,5 @@ type Task struct {
 }
 
 func (t Task) String() string {
-	return fmt.Sprintf("{Id: %d, Title: %s, IsDone: %t, DueDate: %s, CategoryId: %d", t.Id, t.Title, t.IsDone, t.DueDate.Format(cfg.TimestampFormat), t.CategoryId)
+	return fmt.Sprintf("{ID: %d, Title: %s, IsDone: %t, DueDate: %s, CategoryId: %d", t.ID, t.Title, t.IsDone, t.DueDate.Format(cfg.TimestampFormat), t.CategoryId)
 }

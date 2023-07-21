@@ -1,15 +1,3 @@
-user storage loaded successfully
-category storage loaded successfully
-task storage loaded successfully
-[INFO] user storage loaded successfully
-[INFO] category storage loaded successfully
-[INFO] task storage loaded successfully
-[INFO] user storage loaded successfully
-[INFO] category storage loaded successfully
-[INFO] task storage loaded successfully
-[INFO] user storage loaded successfully
-[INFO] category storage loaded successfully
-[INFO] task storage loaded successfully
 [INFO] user storage loaded successfully
 [INFO] category storage loaded successfully
 [ERROR] methodName: load, parent error: unexpected end of JSON input, message: , meta data: map[]

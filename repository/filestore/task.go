@@ -74,7 +74,7 @@ func (tr *taskRepository) Create(task entity.Task) (entity.Task, error) {
 	}
 	defer file.Close()
 
-	task.Id = uint(len(tr.tasks)) + 1
+	task.ID = uint(len(tr.tasks)) + 1
 	tByte, sErr := tr.serializer.Serialize(task)
 	if sErr != nil {
 		logger.LOGGER.Error(logger.RichError{MethodName: "Create", Parent: sErr})

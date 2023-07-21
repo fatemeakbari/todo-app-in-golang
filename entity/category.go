@@ -3,12 +3,12 @@ package entity
 import "fmt"
 
 type Category struct {
-	Id    uint
+	ID    uint
 	Title string
 
 	UserId uint
 }
 
 func (c Category) String() string {
-	return fmt.Sprintf("{Id: %d, Title: %s}", c.Id, c.Title)
+	return fmt.Sprintf("{ID: %d, Title: %s}", c.ID, c.Title)
 }
