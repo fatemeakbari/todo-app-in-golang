@@ -8,8 +8,8 @@ import (
 	"todo/entity"
 	"todo/logger"
 	"todo/pkg"
+	"todo/pkg/serializer"
 	"todo/repository"
-	"todo/serializer"
 )
 
 type userRepository struct {

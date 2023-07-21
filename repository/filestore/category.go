@@ -7,8 +7,8 @@ import (
 	"os"
 	"todo/entity"
 	"todo/logger"
+	"todo/pkg/serializer"
 	"todo/repository"
-	"todo/serializer"
 )
 
 type categoryRepository struct {

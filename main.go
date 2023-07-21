@@ -8,10 +8,10 @@ import (
 	"time"
 	"todo/cfg"
 	"todo/entity"
+	"todo/pkg/serializer"
 	"todo/pkg/sha256"
 	"todo/repository"
 	"todo/repository/filestore"
-	"todo/serializer"
 )
 
 var (
